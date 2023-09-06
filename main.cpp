@@ -1,29 +1,53 @@
 #include <QApplication>
-#include <QWidget>
-#include <QPushButton>
-#include <QMenu>
-#include <QDebug>
+#include <QtWidgets>
+
+class ArrowButton : public QPushButton {
+    Q_OBJECT
+
+public:
+    ArrowButton(QWidget *parent = nullptr) : QPushButton(parent) {
+        setStyleSheet("text-align: left; padding-left: 10px;");
+        setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+        setFixedHeight(30);
+
+        const auto arrow = QString::fromWCharArray(L"\25BC");
+        arrowLabel = new QLabel(arrow);
+        arrowLabel->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
+        arrowLabel->setFixedSize(30, 30);
+
+        connect(this, &QPushButton::clicked, this, &ArrowButton::toggleMenu);
+
+        menu = new QMenu;
+        menu->addAction("메뉴 항목 1");
+        menu->addAction("메뉴 항목 2");
+        menu->addAction("메뉴 항목 3");
+    }
+
+private slots:
+    void toggleMenu() {
+        if (!menu->isVisible()) {
+            menu->popup(mapToGlobal(QPoint(0, -menu->sizeHint().height())));
+        } else {
+            menu->hide();
+        }
+    }
+
+private:
+    QLabel *arrowLabel;
+    QMenu *menu;
+};
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
 
     QWidget window;
-    window.setFixedSize(200, 100);
+    QVBoxLayout *layout = new QVBoxLayout;
 
-    QPushButton button("Menu Button", &window);
-    button.setGeometry(10, 10, 180, 30);
+    ArrowButton *arrowButton = new ArrowButton;
+    layout->addWidget(arrowButton);
 
-    QMenu menu(&button);
-    QAction *action1 = menu.addAction("Option 1");
-    QAction *action2 = menu.addAction("Option 2");
-    QAction *action3 = menu.addAction("Option 3");
-
-    QObject::connect(action1, &QAction::triggered, [&]() { qDebug() << "Option 1 selected"; });
-    QObject::connect(action2, &QAction::triggered, [&]() { qDebug() << "Option 2 selected"; });
-    QObject::connect(action3, &QAction::triggered, [&]() { qDebug() << "Option 3 selected"; });
-
-    button.setMenu(&menu);
-
+    window.setLayout(layout);
+    window.setWindowTitle("Arrow Button Example");
     window.show();
 
     return app.exec();
